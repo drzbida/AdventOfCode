@@ -58,10 +58,6 @@ public class Program
             return;
         }
 
-        Console.WriteLine(
-            $"Running latest solution: {latestSolution.Attribute.Year} Day {latestSolution.Attribute.Day}"
-        );
-
         if (Activator.CreateInstance(latestSolution.Type) is not AdventOfCodeSolution solution)
         {
             Console.WriteLine("Failed to create an instance of the solution.");
@@ -93,7 +89,6 @@ public class Program
             return;
         }
 
-        Console.WriteLine($"Running solution: {year} Day {day}");
         await solution.RunAsync();
     }
 
@@ -114,10 +109,6 @@ public class Program
 
         foreach (var solutionInfo in solutions)
         {
-            Console.WriteLine(
-                $"Running solution: {solutionInfo.Attribute!.Year} Day {solutionInfo.Attribute!.Day}"
-            );
-
             if (Activator.CreateInstance(solutionInfo.Type) is not AdventOfCodeSolution solution)
             {
                 Console.WriteLine(
