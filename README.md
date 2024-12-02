@@ -60,7 +60,8 @@ public class Day1 : AdventOfCodeSolution<int>
 }
 ```
 
-https://github.com/user-attachments/assets/de4431bb-6cba-421f-82d4-d36a15b6cdae
+https://github.com/user-attachments/assets/94fd4409-8c0a-45e5-a20b-613b37a8ec1e
+
 
 
 
