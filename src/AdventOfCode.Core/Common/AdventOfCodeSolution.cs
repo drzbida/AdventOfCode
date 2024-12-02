@@ -16,8 +16,13 @@ public abstract class AdventOfCodeSolution<T>
 
         var results = string.Empty;
 
+        var url = $"https://adventofcode.com/{attr.Year}/day/{attr.Day}";
         var headerText =
-            $"[bold aqua]Year:[/] [bold yellow]{attr.Year}[/]  [bold aqua]Day:[/] [bold yellow]{attr.Day}[/]\n";
+            $"[bold aqua]Name:[/] [bold yellow]{GetType().Name}[/]\n"
+            + $"[bold aqua]Year:[/] [bold yellow]{attr.Year}[/]\n"
+            + $"[bold aqua]Day:[/] [bold yellow]{attr.Day}[/]\n"
+            + $"[bold aqua]URL:[/] [link={url}]{url}[/]";
+
         AnsiConsole
             .Live(new Panel(results).Header(headerText).Expand())
             .Start(ctx =>

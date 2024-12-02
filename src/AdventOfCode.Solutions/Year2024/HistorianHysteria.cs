@@ -3,7 +3,7 @@ using AdventOfCode.Core.Common;
 namespace AdventOfCode.Solutions.Year2024;
 
 [AdventOfCode(2024, 1)]
-public class Day1 : AdventOfCodeSolution<int>
+public class HistorianHysteria : AdventOfCodeSolution<int>
 {
     protected override string Test =>
         """
