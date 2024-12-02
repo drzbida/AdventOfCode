@@ -4,7 +4,7 @@ using Spectre.Console;
 
 namespace AdventOfCode.Core.Common;
 
-public abstract class AdventOfCodeSolution
+public abstract class AdventOfCodeSolution<T>
 {
     public async Task RunAsync()
     {
@@ -22,7 +22,7 @@ public abstract class AdventOfCodeSolution
             .Live(new Panel(results).Header(headerText).Expand())
             .Start(ctx =>
             {
-                var tasks = new (string Label, Func<string> Action)[]
+                var tasks = new (string Label, Func<T> Action)[]
                 {
                     ("Test Part 1", () => PartOne(testLines)),
                     ("Part 1", () => PartOne(inputLines)),
@@ -54,7 +54,7 @@ public abstract class AdventOfCodeSolution
     private static string[] ParseLines(string input) =>
         input.Split("\n", StringSplitOptions.RemoveEmptyEntries);
 
-    private static string AddResult(string currentContent, string label, Func<string> action)
+    private static string AddResult(string currentContent, string label, Func<T> action)
     {
         label = label.PadRight(20);
         var stopwatch = Stopwatch.StartNew();
@@ -63,8 +63,8 @@ public abstract class AdventOfCodeSolution
         try
         {
             var result = action();
-            var escapedResult = Markup.Escape(result);
             stopwatch.Stop();
+            var escapedResult = Markup.Escape(result?.ToString() ?? "No result");
 
             var elapsedTime = stopwatch.ElapsedMilliseconds;
             resultMarkup =
@@ -88,7 +88,7 @@ public abstract class AdventOfCodeSolution
             : $"{currentContent}\n{resultMarkup}";
     }
 
-    protected abstract string PartOne(string[] lines);
-    protected abstract string PartTwo(string[] lines);
+    protected abstract T PartOne(string[] lines);
+    protected abstract T PartTwo(string[] lines);
     protected abstract string Test { get; }
 }

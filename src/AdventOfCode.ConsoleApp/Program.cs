@@ -52,19 +52,7 @@ public class Program
             .ThenByDescending(t => t.Attribute?.Day)
             .FirstOrDefault();
 
-        if (latestSolution?.Attribute == null)
-        {
-            Console.WriteLine("No solutions found.");
-            return;
-        }
-
-        if (Activator.CreateInstance(latestSolution.Type) is not AdventOfCodeSolution solution)
-        {
-            Console.WriteLine("Failed to create an instance of the solution.");
-            return;
-        }
-
-        await solution.RunAsync();
+        await RunSolutionAsync(latestSolution?.Type);
     }
 
     private static async Task RunSpecificSolution(int year, int day)
@@ -77,19 +65,7 @@ public class Program
             && attr.Day == day
         );
 
-        if (solutionType == null)
-        {
-            Console.WriteLine($"No solution found for {year} Day {day}.");
-            return;
-        }
-
-        if (Activator.CreateInstance(solutionType) is not AdventOfCodeSolution solution)
-        {
-            Console.WriteLine($"Failed to create an instance of solution for {year} Day {day}.");
-            return;
-        }
-
-        await solution.RunAsync();
+        await RunSolutionAsync(solutionType);
     }
 
     private static async Task RunAllSolutions()
@@ -109,16 +85,27 @@ public class Program
 
         foreach (var solutionInfo in solutions)
         {
-            if (Activator.CreateInstance(solutionInfo.Type) is not AdventOfCodeSolution solution)
-            {
-                Console.WriteLine(
-                    $"Failed to create an instance of solution: {solutionInfo.Type.FullName}"
-                );
-                continue;
-            }
-
-            await solution.RunAsync();
+            await RunSolutionAsync(solutionInfo.Type);
         }
+    }
+
+    private static async Task<bool> RunSolutionAsync(Type? solutionType)
+    {
+        if (solutionType == null)
+        {
+            Console.WriteLine("Failed to get the solution type.");
+            return false;
+        }
+        var createdSolution = Activator.CreateInstance(solutionType);
+        if (createdSolution == null)
+        {
+            Console.WriteLine("Failed to create an instance of the solution.");
+            return false;
+        }
+
+        dynamic solution = createdSolution;
+        await solution.RunAsync();
+        return true;
     }
 
     private static Type[] GetSolutionTypes()
@@ -126,7 +113,10 @@ public class Program
         return AppDomain
             .CurrentDomain.GetAssemblies()
             .SelectMany(a => a.GetTypes())
-            .Where(t => t.IsSubclassOf(typeof(AdventOfCodeSolution)) && !t.IsAbstract)
+            .Where(t =>
+                t.BaseType is { IsGenericType: true }
+                && t.BaseType.GetGenericTypeDefinition() == typeof(AdventOfCodeSolution<>)
+            )
             .ToArray();
     }
 }

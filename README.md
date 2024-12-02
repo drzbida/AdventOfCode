@@ -34,7 +34,7 @@ using AdventOfCode.Core.Common;
 namespace AdventOfCode.Solutions.Year2024;
 
 [AdventOfCode(2024, 1)]
-public class Day1 : AdventOfCodeSolution
+public class Day1 : AdventOfCodeSolution<int>
 {
     protected override string Test =>
         """
@@ -46,13 +46,13 @@ public class Day1 : AdventOfCodeSolution
             3   3
             """;
 
-    protected override string PartOne(string[] lines)
+    protected override int PartOne(string[] lines)
     {
         Thread.Sleep(2000);
-        return "1";
+        return 1;
     }
 
-    protected override string PartTwo(string[] lines)
+    protected override int PartTwo(string[] lines)
     {
         Thread.Sleep(1000);
         throw new NotImplementedException();
