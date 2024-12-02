@@ -18,27 +18,26 @@ public abstract class AdventOfCodeSolution<T>
 
         var url = $"https://adventofcode.com/{attr.Year}/day/{attr.Day}";
         var headerText =
-            $"[bold aqua]Name:[/] [bold yellow]{GetType().Name}[/]\n"
+            $"[bold aqua]Name:[/] [#7f7fff][underline][link={url}]{GetType().Name}[/][/][/]\n"
             + $"[bold aqua]Year:[/] [bold yellow]{attr.Year}[/]\n"
-            + $"[bold aqua]Day:[/] [bold yellow]{attr.Day}[/]\n"
-            + $"[bold aqua]URL:[/] [link={url}]{url}[/]";
+            + $"[bold aqua]Day:[/] [bold yellow]{attr.Day}[/]\n";
 
         AnsiConsole
-            .Live(new Panel(results).Header(headerText).Expand())
+            .Live(new Panel(results).Header(headerText))
             .Start(ctx =>
             {
                 var tasks = new (string Label, Func<T> Action)[]
                 {
-                    ("Test Part 1", () => PartOne(testLines)),
+                    ("Test 1", () => PartOne(testLines)),
                     ("Part 1", () => PartOne(inputLines)),
-                    ("Test Part 2", () => PartTwo(testLines)),
+                    ("Test 2", () => PartTwo(testLines)),
                     ("Part 2", () => PartTwo(inputLines)),
                 };
 
                 foreach (var (label, action) in tasks)
                 {
                     results = AddResult(results, label, action);
-                    ctx.UpdateTarget(new Panel(results).Header(headerText).Expand());
+                    ctx.UpdateTarget(new Panel(results).Header(headerText));
                 }
             });
     }
@@ -61,7 +60,6 @@ public abstract class AdventOfCodeSolution<T>
 
     private static string AddResult(string currentContent, string label, Func<T> action)
     {
-        label = label.PadRight(20);
         var stopwatch = Stopwatch.StartNew();
 
         string resultMarkup;
@@ -69,7 +67,7 @@ public abstract class AdventOfCodeSolution<T>
         {
             var result = action();
             stopwatch.Stop();
-            var escapedResult = Markup.Escape(result?.ToString() ?? "No result");
+            var escapedResult = Markup.Escape(result?.ToString() ?? "No result").PadRight(65);
 
             var elapsedTime = stopwatch.ElapsedMilliseconds;
             resultMarkup =
@@ -79,12 +77,11 @@ public abstract class AdventOfCodeSolution<T>
         {
             stopwatch.Stop();
 
-            var elapsedTime = stopwatch.ElapsedMilliseconds;
             var escapedMessage = Markup.Escape(ex.Message);
             var escapedStackTrace = Markup.Escape(ex.StackTrace ?? "No stack trace available");
 
             resultMarkup =
-                $"[bold yellow]{label}[/]: [red]Error: {escapedMessage}[/] ([grey]{elapsedTime}ms[/])\n"
+                $"[bold yellow]{label}[/]: [red]Error: {escapedMessage}[/]\n"
                 + $"[bold dim]StackTrace:[/]\n[dim]{escapedStackTrace}[/]";
         }
 
