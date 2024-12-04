@@ -56,7 +56,7 @@ public abstract class AdventOfCodeSolution<T>
     }
 
     private static string[] ParseLines(string input) =>
-        input.Split("\n", StringSplitOptions.RemoveEmptyEntries);
+        input.EndsWith('\n') ? input.Split('\n').SkipLast(1).ToArray() : input.Split('\n');
 
     private static string AddResult(string currentContent, string label, Func<T> action)
     {
