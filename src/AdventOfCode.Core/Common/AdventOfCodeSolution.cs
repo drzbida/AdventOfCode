@@ -1,10 +1,11 @@
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 using AdventOfCode.Core.Input;
 using Spectre.Console;
 
 namespace AdventOfCode.Core.Common;
 
-public abstract class AdventOfCodeSolution<T>
+public abstract partial class AdventOfCodeSolution<T>
 {
     public async Task RunAsync()
     {
@@ -55,8 +56,11 @@ public abstract class AdventOfCodeSolution<T>
         return attr;
     }
 
-    private static string[] ParseLines(string input) =>
-        input.EndsWith('\n') ? input.Split('\n').SkipLast(1).ToArray() : input.Split('\n');
+    private static string[] ParseLines(string input)
+    {
+        var lines = SplitRegex().Split(input);
+        return input.EndsWith("\r\n") || input.EndsWith('\n') ? lines.SkipLast(1).ToArray() : lines;
+    }
 
     private static string AddResult(string currentContent, string label, Func<T> action)
     {
@@ -93,4 +97,7 @@ public abstract class AdventOfCodeSolution<T>
     protected abstract T PartOne(string[] lines);
     protected abstract T PartTwo(string[] lines);
     protected abstract string Test { get; }
+
+    [GeneratedRegex(@"\r\n|\n")]
+    private static partial Regex SplitRegex();
 }
