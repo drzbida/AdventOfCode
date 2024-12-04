@@ -1,0 +1,55 @@
+{
+   "version": "0.2.0",
+   "configurations": [
+      {
+         "name": "Launch latest solution",
+         "type": "coreclr",
+         "request": "launch",
+         "preLaunchTask": "build",
+         "program": "${workspaceFolder}/src/AdventOfCode.ConsoleApp/bin/Debug/net8.0/AdventOfCode.ConsoleApp.dll",
+         "args": "${input:inputArgs}",
+         "cwd": "${workspaceFolder}/src/AdventOfCode.ConsoleApp",
+         "stopAtEntry": false,
+         "clientID": "vscode",
+         "clientName": "Visual Studio Code",
+         "columnsStartAt1": true,
+         "linesStartAt1": true,
+         "locale": "en",
+         "pathFormat": "path",
+         "externalConsole": false,
+         "console": "integratedTerminal"
+      },
+      {
+         "name": "Launch specific solution",
+         "type": "coreclr",
+         "request": "launch",
+         "preLaunchTask": "build",
+         "program": "${workspaceFolder}/src/AdventOfCode.ConsoleApp/bin/Debug/net8.0/AdventOfCode.ConsoleApp.dll",
+         "args": ["specific", "${input:selectYear}", "${input:selectDay}"],
+         "cwd": "${workspaceFolder}/src/AdventOfCode.ConsoleApp",
+         "stopAtEntry": false,
+         "clientID": "vscode",
+         "clientName": "Visual Studio Code",
+         "columnsStartAt1": true,
+         "linesStartAt1": true,
+         "locale": "en",
+         "pathFormat": "path",
+         "externalConsole": false,
+         "console": "integratedTerminal"
+      }
+   ],
+   "inputs": [
+      {
+         "id": "selectYear",
+         "type": "promptString",
+         "default": "",
+         "description": "Select the year (2015-2024)"
+      },
+      {
+         "id": "selectDay",
+         "type": "promptString",
+         "default": "",
+         "description": "Select the day (1-25)"
+      }
+   ]
+}
