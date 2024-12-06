@@ -1,4 +1,5 @@
 using AdventOfCode.Core.Common;
+using AdventOfCode.Core.Utils;
 
 namespace AdventOfCode.Solutions.Year2024;
 
@@ -54,9 +55,6 @@ public class CeresSearch : AdventOfCodeSolution<int>
         return GetCharIndexes(mat, 'A').Sum(pos => IsCrossMas(mat, pos));
     }
 
-    private static bool IsValid(Vector2Int pos, int n, int m) =>
-        pos.X >= 0 && pos.X < n && pos.Y >= 0 && pos.Y < m;
-
     private static IEnumerable<Vector2Int> GetCharIndexes(char[][] mat, char c)
     {
         for (int i = 0; i < mat.Length; i++)
@@ -87,7 +85,7 @@ public class CeresSearch : AdventOfCodeSolution<int>
 
         var nextPos = pos + direction;
 
-        if (!IsValid(nextPos, mat.Length, mat[0].Length))
+        if (!nextPos.InBounds(mat.Length, mat[0].Length))
         {
             return 0;
         }
@@ -105,7 +103,7 @@ public class CeresSearch : AdventOfCodeSolution<int>
             var pos1 = center + dir1;
             var pos2 = center + dir2;
 
-            if (!IsValid(pos1, n, m) || !IsValid(pos2, n, m))
+            if (!pos1.InBounds(n, m) || !pos2.InBounds(n, m))
             {
                 return 0;
             }
