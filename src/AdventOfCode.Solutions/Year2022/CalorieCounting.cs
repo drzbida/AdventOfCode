@@ -1,4 +1,5 @@
 using AdventOfCode.Core.Common;
+using AdventOfCode.Core.Utils;
 
 namespace AdventOfCode.Solutions.Year2022;
 
@@ -25,32 +26,21 @@ public class HistorianHysteria : AdventOfCodeSolution<int>
 
     protected override int PartOne(string[] lines)
     {
-        return ChunkByEmptyLine(lines).Select(elf => elf.Sum()).Max();
+        return lines
+            .PartitionBy(string.IsNullOrWhiteSpace)
+            .Select(chunk => chunk.Select(int.Parse).ToList())
+            .Select(elf => elf.Sum())
+            .Max();
     }
 
     protected override int PartTwo(string[] lines)
     {
-        return ChunkByEmptyLine(lines)
+        return lines
+            .PartitionBy(string.IsNullOrWhiteSpace)
+            .Select(chunk => chunk.Select(int.Parse).ToList())
             .Select(elf => elf.Sum())
             .OrderByDescending(x => x)
             .Take(3)
             .Sum();
     }
-
-    public static IEnumerable<List<int>> ChunkByEmptyLine(string[] lines) =>
-        lines.Aggregate(
-            new List<List<int>> { new() },
-            (acc, line) =>
-            {
-                if (string.IsNullOrWhiteSpace(line))
-                {
-                    acc.Add([]);
-                }
-                else
-                {
-                    acc[^1].Add(int.Parse(line));
-                }
-                return acc;
-            }
-        );
 }
