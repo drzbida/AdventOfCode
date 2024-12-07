@@ -1,7 +1,5 @@
-using System.Numerics;
 using System.Text.RegularExpressions;
 using AdventOfCode.Core.Common;
-using AdventOfCode.Core.Utils;
 
 namespace AdventOfCode.Solutions.Year2024;
 
@@ -23,110 +21,80 @@ public partial class BridgeRepair : AdventOfCodeSolution<long>
 
     protected override long PartOne(string[] lines)
     {
-        long total = 0;
-        foreach (var line in lines)
-        {
-            var match = InputRegex().Match(line);
-            var value = long.Parse(match.Groups[1].Value);
-            var elements = match.Groups[2].Value.Split(' ').Select(long.Parse).ToArray();
-            var num_bits = elements.Length - 1;
-
-            var max_number = (2 << num_bits) - 1;
-
-            var found = false;
-
-            for (var current_number = 0; current_number < max_number; current_number++)
+        return lines
+            .AsParallel()
+            .Sum(line =>
             {
-                var sum = elements[0];
+                var match = InputRegex().Match(line);
+                var target = long.Parse(match.Groups[1].Value);
+                var elements = match.Groups[2].Value.Split(' ').Select(long.Parse).ToArray();
 
-                for (var i = 1; i < elements.Length; i++)
-                {
-                    if ((current_number & (1 << i)) != 0)
-                    {
-                        sum += elements[i];
-                    }
-                    else
-                    {
-                        sum *= elements[i];
-                    }
-                }
-
-                if (sum == value)
-                {
-                    found = true;
-                    break;
-                }
-            }
-
-            if (found)
-            {
-                total += value;
-            }
-        }
-        return total;
-    }
-
-    public static string LongToString(long value, int toBase)
-    {
-        string result = string.Empty;
-        do
-        {
-            result = "0123456789ABCDEF"[(int)value % toBase] + result;
-            value /= toBase;
-        } while (value > 0);
-
-        return result;
+                return CanReachTargetBackward(target, elements, elements.Length - 1) ? target : 0;
+            });
     }
 
     protected override long PartTwo(string[] lines)
     {
-        long total = 0;
-        foreach (var line in lines)
+        // ~900 microseconds
+        return lines
+            .AsParallel()
+            .Sum(line =>
+            {
+                var match = InputRegex().Match(line);
+                var target = long.Parse(match.Groups[1].Value);
+                var elements = match.Groups[2].Value.Split(' ').Select(long.Parse).ToArray();
+
+                return CanReachTargetBackward(target, elements, elements.Length - 1, true)
+                    ? target
+                    : 0;
+            });
+    }
+
+    private static bool CanReachTargetBackward(
+        long target,
+        long[] elements,
+        int index,
+        bool hasConcatenate = false
+    )
+    {
+        if (index < 0)
         {
-            var match = InputRegex().Match(line);
-            var value = long.Parse(match.Groups[1].Value);
-            var elements = match.Groups[2].Value.Split(' ').Select(long.Parse).ToArray();
-            var num_bits = elements.Length - 1;
+            return target == 0;
+        }
+        var current = elements[index];
 
-            var max_number = (long)Math.Pow(3, num_bits);
-
-            var found = false;
-
-            for (var current_number = 0; current_number < max_number; current_number++)
+        // multiply valid
+        if (target % current == 0)
+        {
+            if (CanReachTargetBackward(target / current, elements, index - 1, hasConcatenate))
             {
-                var sum = elements[0];
-                var representation = LongToString(current_number, 3).PadLeft(num_bits, '0');
-
-                for (var i = 1; i < elements.Length; i++)
-                {
-                    var bit = representation[i - 1] - '0';
-                    if (bit == 0)
-                    {
-                        sum += elements[i];
-                    }
-                    else if (bit == 1)
-                    {
-                        sum *= elements[i];
-                    }
-                    else
-                    {
-                        sum = long.Parse(sum.ToString() + elements[i].ToString());
-                    }
-                }
-
-                if (sum == value)
-                {
-                    found = true;
-                    break;
-                }
-            }
-
-            if (found)
-            {
-                total += value;
+                return true;
             }
         }
-        return total;
+
+        // concatenate valid
+        if (hasConcatenate)
+        {
+            var targetStr = target.ToString();
+            var currentStr = current.ToString();
+
+            if (targetStr.EndsWith(currentStr))
+            {
+                var nextTarget = targetStr[..^currentStr.Length];
+                if (!long.TryParse(nextTarget, out var parsedNextTarget))
+                {
+                    parsedNextTarget = 0;
+                }
+
+                if (CanReachTargetBackward(parsedNextTarget, elements, index - 1, hasConcatenate))
+                {
+                    return true;
+                }
+            }
+        }
+
+        // add valid
+        return CanReachTargetBackward(target - current, elements, index - 1, hasConcatenate);
     }
 
     [GeneratedRegex(@"(\d+): (.*)")]
