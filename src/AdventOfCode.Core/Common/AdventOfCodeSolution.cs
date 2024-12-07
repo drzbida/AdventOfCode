@@ -23,6 +23,14 @@ public abstract partial class AdventOfCodeSolution<T>
             + $"[bold aqua]Year:[/] [bold yellow]{attr.Year}[/]\n"
             + $"[bold aqua]Day:[/] [bold yellow]{attr.Day}[/]\n";
 
+        // warm-up
+        try
+        {
+            PartOne(testLines);
+            PartTwo(testLines);
+        }
+        catch { }
+
         AnsiConsole
             .Live(new Panel(results).Header(headerText))
             .Start(ctx =>
@@ -73,12 +81,23 @@ public abstract partial class AdventOfCodeSolution<T>
             stopwatch.Stop();
 
             var elapsedTime = stopwatch.ElapsedTicks * 1000000 / Stopwatch.Frequency;
-            string timeUnit =
-                elapsedTime < 10000 ? $"{elapsedTime}µs" : $"{stopwatch.ElapsedMilliseconds}ms";
+            string timeUnit;
+            string timeColor;
+
+            if (elapsedTime < 10000)
+            {
+                timeUnit = $"{elapsedTime}µs";
+                timeColor = "gray";
+            }
+            else
+            {
+                timeUnit = $"{stopwatch.ElapsedMilliseconds}ms";
+                timeColor = "magenta";
+            }
 
             var escapedResult = Markup.Escape(result?.ToString() ?? "No result").PadRight(65);
             resultMarkup =
-                $"[bold yellow]{label}[/]: [green]{escapedResult}[/] ([grey]{timeUnit}[/])";
+                $"[bold yellow]{label}[/]: [green]{escapedResult}[/] ([{timeColor}]{timeUnit}[/])";
         }
         catch (Exception ex)
         {
