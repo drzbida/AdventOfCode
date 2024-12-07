@@ -71,11 +71,14 @@ public abstract partial class AdventOfCodeSolution<T>
         {
             var result = action();
             stopwatch.Stop();
-            var escapedResult = Markup.Escape(result?.ToString() ?? "No result").PadRight(65);
 
-            var elapsedTime = stopwatch.ElapsedMilliseconds;
+            var elapsedTime = stopwatch.ElapsedTicks * 1000000 / Stopwatch.Frequency;
+            string timeUnit =
+                elapsedTime < 10000 ? $"{elapsedTime}µs" : $"{stopwatch.ElapsedMilliseconds}ms";
+
+            var escapedResult = Markup.Escape(result?.ToString() ?? "No result").PadRight(65);
             resultMarkup =
-                $"[bold yellow]{label}[/]: [green]{escapedResult}[/] ([grey]{elapsedTime}ms[/])";
+                $"[bold yellow]{label}[/]: [green]{escapedResult}[/] ([grey]{timeUnit}[/])";
         }
         catch (Exception ex)
         {
