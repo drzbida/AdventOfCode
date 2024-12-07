@@ -7,7 +7,7 @@
          "request": "launch",
          "preLaunchTask": "build",
          "program": "${workspaceFolder}/src/AdventOfCode.ConsoleApp/bin/Debug/net8.0/AdventOfCode.ConsoleApp.dll",
-         "args": "${input:inputArgs}",
+         "args": "",
          "cwd": "${workspaceFolder}/src/AdventOfCode.ConsoleApp",
          "stopAtEntry": false,
          "clientID": "vscode",
