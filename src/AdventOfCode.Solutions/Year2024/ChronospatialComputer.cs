@@ -1,4 +1,3 @@
-using System.Numerics;
 using AdventOfCode.Core.Common;
 
 namespace AdventOfCode.Solutions.Year2024;
@@ -6,98 +5,93 @@ namespace AdventOfCode.Solutions.Year2024;
 [AdventOfCode(2024, 17)]
 public partial class ChronospatialComputer : AdventOfCodeSolution<string>
 {
-    /*protected override string Test =>*/
-    /*    """*/
-    /*        Register A: 729*/
-    /*        Register B: 0*/
-    /*        Register C: 0*/
-    /**/
-    /*        Program: 0,1,5,4,3,0*/
-    /*        """;*/
-
-    /*protected override string Test =>*/
-    /*    """*/
-    /*        Register A: 234880*/
-    /*        Register B: 0*/
-    /*        Register C: 0*/
-    /**/
-    /*        Program: 2,4,1,7,7,5,1,7,4,6,0,3,5,5,3,0*/
-    /*        """;*/
-
     protected override string Test =>
         """
-            Register A: 2024
+            Register A: 729
             Register B: 0
             Register C: 0
 
-            Program: 0,3,5,4,3,0
+            Program: 0,1,5,4,3,0
             """;
 
     protected override string PartOne(string[] lines)
     {
         var (regA, regB, regC, program) = ParseInput(lines);
-        var ip = 0;
-        var output = new List<BigInteger>();
-
-        try
-        {
-            while (true)
-            {
-                var command = Commands[program[ip]];
-                command.Execute(ref regA, ref regB, ref regC, ref ip, program, output);
-            }
-        }
-        catch (ArgumentOutOfRangeException) { }
-
-        var outputStr = string.Join(",", output);
-
-        return outputStr;
+        return string.Join(",", Run(regA, regB, regC, program));
     }
 
     protected override string PartTwo(string[] lines)
     {
+        // Not sure if there is a smarter way to solve this
+        // I've printed a lot of outputs from i=1..N with the binary
+        // represeentation of i and it seems to be a pattern
+        // I can see at the begggining that values of i between
+        // 2^0 - 2^1 have a single outputs
+        // 2^1 - 2^2 have two outpus
+        // 2^2 - 2^3 have three outputs
+        // At some point this stops being true (I think they start repeeating)
+        // but I think we can get closer to the answer by finding the appropriate
+        // bits for each value in the output. It seems that 3 bits at the begggining
+        // are used for the last 1 output, and so on
+
         var (_, regB, regC, program) = ParseInput(lines);
-        var programStr = string.Join(",", program);
-        for (long i = 0; i < 500_000_000_000; i++)
-        {
-            var output = Run(i, regB, regC, program);
+        var target = new List<int>(program);
+        target.Reverse();
 
-            var outputStr = string.Join(",", output);
-            var iInBinary = Convert.ToString(i, 2);
-
-            Console.WriteLine($"Found : {i} | {iInBinary} -> {outputStr}");
-            if (outputStr == programStr)
-            {
-                Console.WriteLine($"Found : {i} | {iInBinary} -> {outputStr}");
-                return i.ToString();
-            }
-        }
-        return "Not found";
+        return FindRegA(0, 0, target, program, regB, regC).ToString();
     }
 
-    private List<string> Run(BigInteger regA, BigInteger regB, BigInteger regC, List<int> program)
+    private static long FindRegA(
+        long value,
+        int depth,
+        List<int> target,
+        List<int> program,
+        long regB,
+        long regC
+    )
+    {
+        if (depth == target.Count)
+        {
+            return value;
+        }
+
+        for (var i = 0; i < 8; i++)
+        {
+            var output = Run(value * 8 + i, regB, regC, program);
+
+            if (output.First() == target[depth])
+            {
+                var result = FindRegA(value * 8 + i, depth + 1, target, program, regB, regC);
+                if (result != -1)
+                {
+                    return result;
+                }
+            }
+        }
+
+        return -1;
+    }
+
+    private static List<int> Run(long regA, long regB, long regC, List<int> program)
     {
         var ip = 0;
-        var output = new List<BigInteger>();
+        var output = new List<long>();
 
         try
         {
             while (true)
             {
-                var command = Commands[program[ip]];
-                command.Execute(ref regA, ref regB, ref regC, ref ip, program, output);
+                Execute(program[ip], ref regA, ref regB, ref regC, ref ip, program, output);
             }
         }
         catch (ArgumentOutOfRangeException) { }
 
-        return output.Select(x => x.ToString()).ToList();
+        return output.Select(x => (int)x).ToList();
     }
 
-    private static (BigInteger A, BigInteger B, BigInteger C, List<int> program) ParseInput(
-        string[] lines
-    )
+    private static (long A, long B, long C, List<int> program) ParseInput(string[] lines)
     {
-        var registers = new Dictionary<string, BigInteger>();
+        var registers = new Dictionary<string, long>();
         var program = new List<int>();
 
         foreach (var line in lines)
@@ -113,7 +107,7 @@ public partial class ChronospatialComputer : AdventOfCodeSolution<string>
             }
             var parts = line.Split(": ");
             var register = parts[0].Split(" ")[1];
-            var value = BigInteger.Parse(parts[1]);
+            var value = long.Parse(parts[1]);
 
             registers[register] = value;
         }
@@ -121,212 +115,96 @@ public partial class ChronospatialComputer : AdventOfCodeSolution<string>
         return (registers["A"], registers["B"], registers["C"], program);
     }
 
-    private readonly Dictionary<int, Command> Commands =
-        new()
+    private static long GetValue(int value, long regA, long regB, long regC, char type)
+    {
+        if (type != 'C')
         {
-            { 0, new Adv() },
-            { 1, new Bxl() },
-            { 2, new Bst() },
-            { 3, new Jnz() },
-            { 4, new Bxc() },
-            { 5, new Out() },
-            { 6, new Bdv() },
-            { 7, new Cdv() },
+            return value;
+        }
+        return value switch
+        {
+            var x when x <= 3 => x,
+            4 => regA,
+            5 => regB,
+            6 => regC,
+            7 => throw new Exception("Should not happen"),
+            _ => throw new Exception("Invalid value"),
         };
+    }
 
-    private abstract class Command(char type)
+    private static void Execute(
+        int opcode,
+        ref long regA,
+        ref long regB,
+        ref long regC,
+        ref int ip,
+        List<int> program,
+        List<long> output
+    )
     {
-        public char Type { get; } = type;
-
-        public abstract void Execute(
-            ref BigInteger regA,
-            ref BigInteger regB,
-            ref BigInteger regC,
-            ref int ip,
-            List<int> program,
-            List<BigInteger> output
-        );
-
-        protected BigInteger GetValue(int value, BigInteger regA, BigInteger regB, BigInteger regC)
+        switch (opcode)
         {
-            if (Type != 'C')
+            case 0:
             {
-                return value;
+                var literal = GetValue(program[++ip], regA, regB, regC, 'C');
+                regA /= (long)Math.Pow(2, literal);
+                ip++;
+                break;
             }
-            return value switch
+            case 1:
             {
-                var x when x <= 3 => new BigInteger(x),
-                4 => regA,
-                5 => regB,
-                6 => regC,
-                7 => throw new Exception("Should not happen"),
-                _ => throw new Exception("Invalid value"),
-            };
-        }
-    }
-
-    private class Adv : Command
-    {
-        public Adv()
-            : base('C') { }
-
-        public override void Execute(
-            ref BigInteger regA,
-            ref BigInteger regB,
-            ref BigInteger regC,
-            ref int ip,
-            List<int> program,
-            List<BigInteger> output
-        )
-        {
-            var literal = GetValue(program[++ip], regA, regB, regC);
-            regA /= (BigInteger)Math.Pow(2, (double)literal);
-            ip++;
-        }
-    }
-
-    private class Bxl : Command
-    {
-        public Bxl()
-            : base('L') { }
-
-        public override void Execute(
-            ref BigInteger regA,
-            ref BigInteger regB,
-            ref BigInteger regC,
-            ref int ip,
-            List<int> program,
-            List<BigInteger> output
-        )
-        {
-            var literal = GetValue(program[++ip], regA, regB, regC);
-            regB ^= literal;
-            ip++;
-        }
-    }
-
-    private class Bst : Command
-    {
-        public Bst()
-            : base('C') { }
-
-        public override void Execute(
-            ref BigInteger regA,
-            ref BigInteger regB,
-            ref BigInteger regC,
-            ref int ip,
-            List<int> program,
-            List<BigInteger> output
-        )
-        {
-            var literal = GetValue(program[++ip], regA, regB, regC);
-            regB = literal % 8;
-            ip++;
-        }
-    }
-
-    private class Jnz : Command
-    {
-        public Jnz()
-            : base('L') { }
-
-        public override void Execute(
-            ref BigInteger regA,
-            ref BigInteger regB,
-            ref BigInteger regC,
-            ref int ip,
-            List<int> program,
-            List<BigInteger> output
-        )
-        {
-            if (regA == 0)
+                var literal = GetValue(program[++ip], regA, regB, regC, 'L');
+                regB ^= literal;
+                ip++;
+                break;
+            }
+            case 2:
             {
+                var literal = GetValue(program[++ip], regA, regB, regC, 'C');
+                regB = literal % 8;
+                ip++;
+                break;
+            }
+            case 3:
+            {
+                if (regA == 0)
+                {
+                    ip += 2;
+                    return;
+                }
+
+                var literal = GetValue(program[++ip], regA, regB, regC, 'L');
+                ip = (int)literal;
+                break;
+            }
+            case 4:
+            {
+                regB ^= regC;
                 ip += 2;
-                return;
+                break;
             }
-
-            var literal = GetValue(program[++ip], regA, regB, regC);
-            ip = (int)literal;
-        }
-    }
-
-    private class Bxc : Command
-    {
-        public Bxc()
-            : base('N') { }
-
-        public override void Execute(
-            ref BigInteger regA,
-            ref BigInteger regB,
-            ref BigInteger regC,
-            ref int ip,
-            List<int> program,
-            List<BigInteger> output
-        )
-        {
-            regB ^= regC;
-            ip += 2;
-        }
-    }
-
-    private class Out : Command
-    {
-        public Out()
-            : base('C') { }
-
-        public override void Execute(
-            ref BigInteger regA,
-            ref BigInteger regB,
-            ref BigInteger regC,
-            ref int ip,
-            List<int> program,
-            List<BigInteger> output
-        )
-        {
-            var literal = GetValue(program[++ip], regA, regB, regC);
-            var o = literal % 8;
-            output.Add(o);
-            ip++;
-        }
-    }
-
-    private class Bdv : Command
-    {
-        public Bdv()
-            : base('C') { }
-
-        public override void Execute(
-            ref BigInteger regA,
-            ref BigInteger regB,
-            ref BigInteger regC,
-            ref int ip,
-            List<int> program,
-            List<BigInteger> output
-        )
-        {
-            var literal = GetValue(program[++ip], regA, regB, regC);
-            regB = regA / (BigInteger)Math.Pow(2, (double)literal);
-            ip++;
-        }
-    }
-
-    private class Cdv : Command
-    {
-        public Cdv()
-            : base('C') { }
-
-        public override void Execute(
-            ref BigInteger regA,
-            ref BigInteger regB,
-            ref BigInteger regC,
-            ref int ip,
-            List<int> program,
-            List<BigInteger> output
-        )
-        {
-            var literal = GetValue(program[++ip], regA, regB, regC);
-            regC = regA / (BigInteger)Math.Pow(2, (double)literal);
-            ip++;
+            case 5:
+            {
+                var literal = GetValue(program[++ip], regA, regB, regC, 'C');
+                var o = literal % 8;
+                output.Add(o);
+                ip++;
+                break;
+            }
+            case 6:
+            {
+                var literal = GetValue(program[++ip], regA, regB, regC, 'C');
+                regB = regA / (long)Math.Pow(2, literal);
+                ip++;
+                break;
+            }
+            case 7:
+            {
+                var literal = GetValue(program[++ip], regA, regB, regC, 'C');
+                regC = regA / (long)Math.Pow(2, literal);
+                ip++;
+                break;
+            }
         }
     }
 }
